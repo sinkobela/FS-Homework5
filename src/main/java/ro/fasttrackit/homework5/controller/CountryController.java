@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import ro.fasttrackit.homework5.domain.Country;
 import ro.fasttrackit.homework5.service.CountryService;
 
-import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("countries")
@@ -18,39 +18,39 @@ public class CountryController {
     }
 
     @GetMapping
-    public List<Country> getAllCountries() throws FileNotFoundException {
-        return countryService.getAllCountries();
+    public List<Country> getAllCountries(@RequestParam (required = false) String includeNeighbour,
+                                         @RequestParam (required = false) String excludeNeighbour) {
+        return countryService.getCountriesNeighbourFilter(includeNeighbour, excludeNeighbour);
     }
 
     @GetMapping("/{id}")
-    public Country getCountryById(@PathVariable Integer id) throws FileNotFoundException, NotFoundException {
+    public Country getCountryById(@PathVariable Integer id) throws NotFoundException {
         return countryService.getCountryById(id);
     }
 
     @GetMapping("/names")
-    public List<String> getAllCountryNames() throws FileNotFoundException {
+    public List<String> getAllCountryNames() {
         return countryService.getAllCountryNames();
     }
 
     @GetMapping("{id}/capital")
-    public String getCapitalByCountryId(@PathVariable Integer id) throws FileNotFoundException, NotFoundException {
+    public String getCapitalByCountryId(@PathVariable Integer id) throws NotFoundException {
         return countryService.getCapitalByCountryId(id);
     }
 
     @GetMapping("{id}/population")
-    public Long getPopulationByCountryId(@PathVariable Integer id) throws FileNotFoundException, NotFoundException {
+    public Long getPopulationByCountryId(@PathVariable Integer id) throws NotFoundException {
         return countryService.getPopulationByCountryId(id);
     }
 
     @GetMapping("{id}/neighbours")
-    public List<String> getCountryNeighbours(@PathVariable Integer id) throws FileNotFoundException, NotFoundException {
+    public List<String> getCountryNeighbours(@PathVariable Integer id) throws NotFoundException {
         return countryService.getCountryNeighbours(id);
     }
 
-    @GetMapping("{includeNeighbour}{excludeNeighbour}")
-    public List<Country> getCountriesWithNeighbourXWithoutY(@RequestParam String includeNeighbour, @RequestParam String excludeNeighbour) throws FileNotFoundException {
-        return countryService.getCountriesWithNeighbourXWithoutY(includeNeighbour, excludeNeighbour);
+    @GetMapping("/population")
+    public Map<String, Long> getMapFromCountryToPopulation() {
+        return countryService.getMapFromCountryNameToPopulation();
     }
-
 
 }

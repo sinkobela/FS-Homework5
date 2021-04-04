@@ -1,21 +1,27 @@
 package ro.fasttrackit.homework5.domain;
 
-
+import javax.persistence.*;
 import java.util.*;
 
+@Entity
 public class Country {
-    private static int idCounter = 1;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    private final int id;
-    private final String name;
-    private final String capital;
-    private final long population;
-    private final long area;
-    private final String continent;
-    private final List<String> neighbours;
+    private String name;
+    private String capital;
+    private long population;
+    private long area;
+    private String continent;
+    @ElementCollection
+    private List<String> neighbours;
 
-    public Country(String name, String capital, long population, long area, String continent, List<String> neighbours) {
-        this.id = idCounter++;
+    public Country() {
+    }
+
+    public Country(Integer id, String name, String capital, long population, long area, String continent, List<String> neighbours) {
+        this.id = id;
         this.name = name;
         this.capital = capital;
         this.population = population;
@@ -26,7 +32,11 @@ public class Country {
                 .orElseGet(ArrayList::new);
     }
 
-    public int getId() {
+    public Country(String name, String capital, long population, long area, String continent, List<String> neighbours) {
+        this(null, name, capital, population, area, continent, neighbours);
+    }
+
+    public Integer getId() {
         return id;
     }
 
@@ -54,12 +64,36 @@ public class Country {
         return Collections.unmodifiableList(neighbours);
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCapital(String capital) {
+        this.capital = capital;
+    }
+
+    public void setPopulation(long population) {
+        this.population = population;
+    }
+
+    public void setArea(long area) {
+        this.area = area;
+    }
+
+    public void setContinent(String continent) {
+        this.continent = continent;
+    }
+
+    public void setNeighbours(List<String> neighbours) {
+        this.neighbours = neighbours;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Country country = (Country) o;
-        return id == country.id && population == country.population && area == country.area && Objects.equals(name, country.name) && Objects.equals(capital, country.capital) && Objects.equals(continent, country.continent) && Objects.equals(neighbours, country.neighbours);
+        return population == country.population && area == country.area && Objects.equals(id, country.id) && Objects.equals(name, country.name) && Objects.equals(capital, country.capital) && Objects.equals(continent, country.continent) && Objects.equals(neighbours, country.neighbours);
     }
 
     @Override

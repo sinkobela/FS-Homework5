@@ -4,8 +4,8 @@ import org.springframework.web.bind.annotation.*;
 import ro.fasttrackit.homework5.domain.Country;
 import ro.fasttrackit.homework5.service.CountryService;
 
-import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("continents")
@@ -17,20 +17,19 @@ public class ContinentController {
     }
 
     @GetMapping
-    public List<String> getAllContinents() throws FileNotFoundException {
+    public List<String> getAllContinents() {
         return countryService.getAllContinents();
     }
 
     @GetMapping("{continentName}/countries")
-    public List<Country> getCountriesInContinent(@RequestParam String continentName) throws FileNotFoundException {
-        return countryService.getCountriesInContinent(continentName);
+    public List<Country> getCountriesInContinent(@PathVariable String continentName,
+                                                 @RequestParam (required = false) Long minPopulation) {
+        return countryService.getCountriesInContinent(continentName, minPopulation);
     }
 
-    @GetMapping("{continentName}/countries/{minPopulation}")
-    public List<Country> getCountriesInContinentWithPopulationLargerThan(@RequestParam String continentName, @PathVariable Long minPopulation) throws FileNotFoundException {
-        return countryService.getCountriesInContinentWithPopulationLargerThan(continentName, minPopulation);
+    @GetMapping("/countries")
+    public Map<String, List<Country>> getMapFromContinentToCountries() {
+        return countryService.getMapFromContinentToCountryList();
     }
-
-
 
 }

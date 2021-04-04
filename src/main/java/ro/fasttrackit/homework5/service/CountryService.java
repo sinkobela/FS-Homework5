@@ -4,97 +4,113 @@ import javassist.NotFoundException;
 import org.springframework.stereotype.Service;
 import ro.fasttrackit.homework5.domain.Country;
 import ro.fasttrackit.homework5.reader.CountryReader;
+import ro.fasttrackit.homework5.repository.CountryRepository;
 
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.*;
-import static org.springframework.data.util.Pair.toMap;
 
 @Service
 public class CountryService {
 
     private final CountryReader countryReader;
+    private final CountryRepository countryRepository;
 
-    public CountryService(CountryReader countryReader) {
+    public CountryService(CountryReader countryReader, CountryRepository countryRepository) throws FileNotFoundException {
         this.countryReader = countryReader;
+        this.countryRepository = countryRepository;
+        saveDataInRepo();
     }
 
-    public List<Country> getAllCountries() throws FileNotFoundException {
-        return countryReader.readCountries();
+    private void saveDataInRepo() throws FileNotFoundException {
+        for (Country country : countryReader.readCountries()) {
+            countryRepository.save(country);
+        }
     }
 
-    public List<String> getAllContinents() throws FileNotFoundException {
-        return countryReader.readCountries().stream()
+    public List<Country> getAllCountries() {
+        return countryRepository.findAll();
+    }
+
+    public List<String> getAllContinents() {
+        return countryRepository.findAll().stream()
                 .map(Country::getContinent)
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    public Country getCountryById(Integer id) throws FileNotFoundException, NotFoundException {
-        return countryReader.readCountries().stream()
+    public Country getCountryById(Integer id) throws NotFoundException {
+        return countryRepository.findAll().stream()
                 .filter(country -> country.getId() == id)
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("There is no country with this id: " + id));
     }
 
-    public List<String> getAllCountryNames() throws FileNotFoundException {
-        return countryReader.readCountries().stream()
+    public List<String> getAllCountryNames() {
+        return countryRepository.findAll().stream()
                 .map(Country::getName)
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    public String getCapitalByCountryId(Integer id) throws FileNotFoundException, NotFoundException {
+    public String getCapitalByCountryId(Integer id) throws NotFoundException {
         return getCountryById(id).getCapital();
     }
 
-    public long getPopulationByCountryId(Integer id) throws FileNotFoundException, NotFoundException {
+    public long getPopulationByCountryId(Integer id) throws NotFoundException {
         return getCountryById(id).getPopulation();
     }
 
-    public List<Country> getCountriesInContinent(String continent) throws FileNotFoundException {
-        return countryReader.readCountries().stream()
+    public List<Country> getCountriesInContinent(String continent, Long minPopulation) {
+        if (minPopulation == null) {
+        return countryRepository.findAll().stream()
                 .filter(country -> country.getContinent().equalsIgnoreCase(continent))
                 .collect(Collectors.toUnmodifiableList());
+        } else {
+            return getCountriesInContinentWithPopulationLargerThan(continent, minPopulation);
+        }
     }
 
-    public List<String> getCountryNeighbours(Integer id) throws FileNotFoundException, NotFoundException {
+    public List<String> getCountryNeighbours(Integer id) throws NotFoundException {
         return getCountryById(id).getNeighbours();
     }
 
-    public List<Country> getCountriesInContinentWithPopulationLargerThan(String continent, long population) throws FileNotFoundException {
-        return getCountriesInContinent(continent).stream()
-                .filter(country -> country.getPopulation() > population)
+    public List<Country> getCountriesInContinentWithPopulationLargerThan(String continentName, Long minPopulation) {
+        return getCountriesInContinent(continentName, null).stream()
+                .filter(country -> country.getPopulation() > minPopulation)
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    public List<Country> getCountriesWithNeighbourXWithoutY(String neighbourX, String neighbourY) throws FileNotFoundException {
-        return countryReader.readCountries().stream()
+    public List<Country> getCountriesWithNeighbourXWithoutY(String neighbourX, String neighbourY) {
+        return countryRepository.findAll().stream()
                 .filter(country -> country.getNeighbours().contains(neighbourX))
                 .filter(country -> !country.getNeighbours().contains(neighbourY))
                 .collect(Collectors.toUnmodifiableList());
     }
 
-//    public Map<String, Long> getMapFromCountryNameToPopulation() throws FileNotFoundException {
-//        return countryReader.readCountries().stream()
-//                .collect(toMap(
-//                        Country::getName,
-//                        Country::getPopulation,
-//
-//                ));
-//    }
+    public List<Country> getCountriesNeighbourFilter(String neighbourX, String neighbourY ){
+        if (neighbourX == null && neighbourY == null) {
+            return getAllCountries();
+        } else {
+            return getCountriesWithNeighbourXWithoutY(neighbourX, neighbourY);
+        }
+    }
 
-//    public Map<String, List<Country>> getMapFromContinentToCountryList() throws FileNotFoundException {
-//        return countryReader.readCountries().stream()
-//                .collect(groupingBy(
-//                        Country::getContinent,
-//
-//                        ))
-//    }
+    public Map<String, Long> getMapFromCountryNameToPopulation() {
+        Map<String, Long> result = new HashMap<>();
+        for (Country country : countryRepository.findAll()) {
+            result.put(country.getName(), country.getPopulation());
+        }
+        return result;
+    }
 
-
-
-
+    public Map<String, List<Country>> getMapFromContinentToCountryList() {
+        return countryRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        Country::getContinent,
+                        HashMap::new,
+                        Collectors.toUnmodifiableList()
+                ));
+    }
 
 
 }
